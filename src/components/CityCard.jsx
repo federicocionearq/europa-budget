@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { calcCity, calcDay, fmt } from '../lib/calc'
-import { Trash2, Plus, ChevronDown, GripVertical } from 'lucide-react'
+import { Trash2, Plus, ChevronDown, ChevronUp } from 'lucide-react'
 
 const DAY_FIELDS = [
   { key: 'train', icon: '🚄', label: 'Tren' },
@@ -10,14 +10,45 @@ const DAY_FIELDS = [
   { key: 'transport', icon: '🚇', label: 'Local' },
 ]
 
-function DayRow({ day, dayIndex, airbnb, onUpdate, onDelete, isLast }) {
+const RESTO_PRESETS = [
+  { label: 'Eco', value: 60, hint: '~15€/pp' },
+  { label: 'Medio', value: 80, hint: '~20€/pp' },
+  { label: 'Especial', value: 120, hint: '~30€/pp' },
+]
+
+const SUPER_PRESETS = [
+  { label: 'Liviano', value: 15, hint: 'desayuno' },
+  { label: 'Normal', value: 25, hint: 'desay+snacks' },
+  { label: 'Completo', value: 40, hint: 'todo en casa' },
+]
+
+function DayRow({ day, dayIndex, totalDays, airbnb, onUpdate, onDelete, onMoveUp, onMoveDown }) {
   const [open, setOpen] = useState(false)
   const total = calcDay(day, airbnb)
+  const canUp = dayIndex > 0
+  const canDown = dayIndex < totalDays - 1
 
   return (
     <div className="day-row">
       <div className="day-header" onClick={() => setOpen(o => !o)}>
         <div className="day-left">
+          {/* Reorder buttons */}
+          <div className="day-reorder" onClick={e => e.stopPropagation()}>
+            <button
+              className={`reorder-btn ${canUp ? '' : 'disabled'}`}
+              onClick={() => canUp && onMoveUp()}
+              title="Subir"
+            >
+              <ChevronUp size={11} />
+            </button>
+            <button
+              className={`reorder-btn ${canDown ? '' : 'disabled'}`}
+              onClick={() => canDown && onMoveDown()}
+              title="Bajar"
+            >
+              <ChevronDown size={11} />
+            </button>
+          </div>
           <span className="day-num">D{dayIndex + 1}</span>
           <input
             className="day-label-input"
@@ -43,19 +74,52 @@ function DayRow({ day, dayIndex, airbnb, onUpdate, onDelete, isLast }) {
               <span className="field-label">Airbnb</span>
               <span className="field-val muted">{fmt(airbnb)}<span className="field-note"> (edit en ciudad)</span></span>
             </div>
+
             {DAY_FIELDS.map(f => (
               <div key={f.key} className="day-field">
                 <span className="field-icon">{f.icon}</span>
                 <span className="field-label">{f.label}</span>
-                <div className="field-input-wrap">
-                  <span className="field-prefix">$</span>
-                  <input
-                    type="number"
-                    className="field-input"
-                    value={day[f.key] || 0}
-                    min={0}
-                    onChange={e => onUpdate({ ...day, [f.key]: Number(e.target.value) })}
-                  />
+                <div className="field-right">
+                  {/* Presets for resto */}
+                  {f.key === 'resto' && (
+                    <div className="preset-btns">
+                      {RESTO_PRESETS.map(p => (
+                        <button
+                          key={p.label}
+                          className={`preset-btn ${day[f.key] === p.value ? 'active' : ''}`}
+                          onClick={() => onUpdate({ ...day, [f.key]: p.value })}
+                          title={p.hint}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {/* Presets for super */}
+                  {f.key === 'super' && (
+                    <div className="preset-btns">
+                      {SUPER_PRESETS.map(p => (
+                        <button
+                          key={p.label}
+                          className={`preset-btn ${day[f.key] === p.value ? 'active' : ''}`}
+                          onClick={() => onUpdate({ ...day, [f.key]: p.value })}
+                          title={p.hint}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div className="field-input-wrap">
+                    <span className="field-prefix">$</span>
+                    <input
+                      type="number"
+                      className="field-input"
+                      value={day[f.key] || 0}
+                      min={0}
+                      onChange={e => onUpdate({ ...day, [f.key]: Number(e.target.value) })}
+                    />
+                  </div>
                 </div>
               </div>
             ))}
@@ -86,14 +150,21 @@ export function CityCard({ city, cityStats, onUpdate, onDelete }) {
     onUpdate({ ...city, days })
   }
 
+  const moveDay = (i, dir) => {
+    const days = [...city.days]
+    const j = i + dir
+    if (j < 0 || j >= days.length) return
+    ;[days[i], days[j]] = [days[j], days[i]]
+    onUpdate({ ...city, days })
+  }
+
   const addDay = () => {
-    const newDay = { label: 'Nuevo día', train: 0, super: 20, resto: 40, entradas: 0, transport: 10, notes: '' }
+    const newDay = { label: 'Nuevo día', train: 0, super: 25, resto: 80, entradas: 0, transport: 10, notes: '' }
     onUpdate({ ...city, days: [...city.days, newDay] })
   }
 
   return (
     <div className="city-card">
-      {/* City header */}
       <div className="city-header" onClick={() => setOpen(o => !o)}>
         <div className="city-left">
           <div className="city-badge">
@@ -118,51 +189,28 @@ export function CityCard({ city, cityStats, onUpdate, onDelete }) {
 
       {open && (
         <div className="city-body">
-          {/* City-level editable fields */}
           <div className="city-fields">
             <div className="city-field-row">
               <label className="city-field-label">Ciudad</label>
-              <input
-                className="city-field-input"
-                value={city.city}
-                onChange={e => onUpdate({ ...city, city: e.target.value })}
-              />
+              <input className="city-field-input" value={city.city} onChange={e => onUpdate({ ...city, city: e.target.value })} />
             </div>
             <div className="city-field-row">
               <label className="city-field-label">País / emoji</label>
-              <input
-                className="city-field-input short"
-                value={city.flag}
-                onChange={e => onUpdate({ ...city, flag: e.target.value })}
-                maxLength={4}
-              />
+              <input className="city-field-input short" value={city.flag} onChange={e => onUpdate({ ...city, flag: e.target.value })} maxLength={4} />
             </div>
             <div className="city-field-row">
               <label className="city-field-label">Noches</label>
-              <input
-                type="number"
-                className="city-field-input short"
-                value={city.nights}
-                min={1}
-                onChange={e => onUpdate({ ...city, nights: Number(e.target.value) })}
-              />
+              <input type="number" className="city-field-input short" value={city.nights} min={1} onChange={e => onUpdate({ ...city, nights: Number(e.target.value) })} />
             </div>
             <div className="city-field-row">
               <label className="city-field-label">Airbnb / noche</label>
               <div className="field-input-wrap">
                 <span className="field-prefix">$</span>
-                <input
-                  type="number"
-                  className="city-field-input short"
-                  value={city.airbnb_per_night}
-                  min={0}
-                  onChange={e => onUpdate({ ...city, airbnb_per_night: Number(e.target.value) })}
-                />
+                <input type="number" className="city-field-input short" value={city.airbnb_per_night} min={0} onChange={e => onUpdate({ ...city, airbnb_per_night: Number(e.target.value) })} />
               </div>
             </div>
           </div>
 
-          {/* Day breakdown */}
           <div className="days-section">
             <div className="days-label">Días</div>
             {city.days.map((day, i) => (
@@ -170,10 +218,12 @@ export function CityCard({ city, cityStats, onUpdate, onDelete }) {
                 key={i}
                 day={day}
                 dayIndex={i}
+                totalDays={city.days.length}
                 airbnb={city.airbnb_per_night}
                 onUpdate={(nd) => updateDay(i, nd)}
                 onDelete={() => deleteDay(i)}
-                isLast={i === city.days.length - 1}
+                onMoveUp={() => moveDay(i, -1)}
+                onMoveDown={() => moveDay(i, 1)}
               />
             ))}
             <button className="add-day-btn" onClick={addDay}>
