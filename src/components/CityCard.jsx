@@ -1,6 +1,15 @@
 import { useState } from 'react'
 import { calcCity, calcDay, fmt } from '../lib/calc'
-import { Trash2, Plus, ChevronDown, ChevronUp } from 'lucide-react'
+import { getCity } from '../lib/cityCatalog'
+import { fmtDate } from '../lib/dates'
+import { Trash2, Plus, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
+
+// Agrega el nombre de una actividad a las notas del día, sin duplicar.
+function appendActivity(notes, name) {
+  const current = (notes || '').trim()
+  if (current.includes(name)) return current
+  return current ? `${current} · ${name}` : name
+}
 
 const DAY_FIELDS = [
   { key: 'train', icon: '🚄', label: 'Tren' },
@@ -22,7 +31,7 @@ const SUPER_PRESETS = [
   { label: 'Completo', value: 40, hint: 'todo en casa' },
 ]
 
-function DayRow({ day, dayIndex, totalDays, airbnb, onUpdate, onDelete, onMoveUp, onMoveDown }) {
+function DayRow({ day, dayIndex, totalDays, airbnb, kids, onUpdate, onDelete, onMoveUp, onMoveDown }) {
   const [open, setOpen] = useState(false)
   const total = calcDay(day, airbnb)
   const canUp = dayIndex > 0
@@ -124,6 +133,30 @@ function DayRow({ day, dayIndex, totalDays, airbnb, onUpdate, onDelete, onMoveUp
               </div>
             ))}
           </div>
+
+          {/* Sugerencias de actividades con niños */}
+          {kids && kids.length > 0 && (
+            <div className="kids-section">
+              <div className="kids-label"><Sparkles size={11} /> Top con niños · tocá para sumar al plan</div>
+              <div className="kids-list">
+                {kids.map(k => {
+                  const added = (day.notes || '').includes(k.name)
+                  return (
+                    <button
+                      key={k.name}
+                      className={`kids-chip ${added ? 'added' : ''}`}
+                      title={k.note + (k.approx ? ` · ≈ €${k.approx}/pers` : '')}
+                      onClick={() => onUpdate({ ...day, notes: appendActivity(day.notes, k.name) })}
+                    >
+                      {added ? '✓ ' : '+ '}{k.name}
+                      {k.approx ? <span className="kids-approx">≈€{k.approx}</span> : null}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           <textarea
             className="day-notes"
             value={day.notes || ''}
@@ -137,8 +170,10 @@ function DayRow({ day, dayIndex, totalDays, airbnb, onUpdate, onDelete, onMoveUp
   )
 }
 
-export function CityCard({ city, cityStats, onUpdate, onDelete }) {
+export function CityCard({ city, cityStats, cityDates, pinnedLabel, onUpdate, onDelete }) {
   const [open, setOpen] = useState(false)
+  const kids = getCity(city.catalogId)?.kids || null
+  const dateLabel = cityDates ? `${fmtDate(cityDates.in)} – ${fmtDate(cityDates.out)}` : null
 
   const updateDay = (i, newDay) => {
     const days = city.days.map((d, idx) => idx === i ? newDay : d)
@@ -171,8 +206,13 @@ export function CityCard({ city, cityStats, onUpdate, onDelete }) {
             <span>{city.nights}n</span>
           </div>
           <div>
-            <div className="city-name">{city.flag} {city.city}</div>
-            <div className="city-sub">{city.days.length} días · {fmt(cityStats.airbnbTotal)} aloj.</div>
+            <div className="city-name">
+              {city.flag} {city.city}
+              {pinnedLabel && <span className={`city-pin ${pinnedLabel}`}>{pinnedLabel}</span>}
+            </div>
+            <div className="city-sub">
+              {dateLabel ? `${dateLabel} · ` : ''}{city.days.length} días · {fmt(cityStats.airbnbTotal)} aloj.
+            </div>
           </div>
         </div>
         <div className="city-right">
@@ -180,9 +220,11 @@ export function CityCard({ city, cityStats, onUpdate, onDelete }) {
             <div className="city-total">{fmt(cityStats.total)}</div>
             <div className="city-avg">{fmt(cityStats.total / city.days.length)}/día</div>
           </div>
-          <button className="city-delete" onClick={e => { e.stopPropagation(); onDelete() }} title="Eliminar ciudad">
-            <Trash2 size={14} />
-          </button>
+          {!pinnedLabel && (
+            <button className="city-delete" onClick={e => { e.stopPropagation(); onDelete() }} title="Eliminar ciudad">
+              <Trash2 size={14} />
+            </button>
+          )}
           <ChevronDown size={16} className={`chevron ${open ? 'open' : ''}`} />
         </div>
       </div>
@@ -220,6 +262,7 @@ export function CityCard({ city, cityStats, onUpdate, onDelete }) {
                 dayIndex={i}
                 totalDays={city.days.length}
                 airbnb={city.airbnb_per_night}
+                kids={kids}
                 onUpdate={(nd) => updateDay(i, nd)}
                 onDelete={() => deleteDay(i)}
                 onMoveUp={() => moveDay(i, -1)}

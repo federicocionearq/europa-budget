@@ -757,3 +757,250 @@ input[type="number"]::-webkit-outer-spin-button { opacity: 1; }
 @media (max-width: 480px) {
   .preset-btns { display: none; }
 }
+
+/* ── Flight setup ────────────────────────────────────── */
+.flight-setup {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-top: 8px;
+}
+
+.fs-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--gold);
+}
+
+.fs-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text3);
+  margin: 4px 0 14px;
+}
+
+.fs-block-label {
+  font-size: 11px;
+  color: var(--text2);
+  font-family: var(--font-mono);
+  letter-spacing: 1px;
+  margin: 14px 0 8px;
+}
+
+.fs-block-label.sub { color: var(--text3); }
+.fs-block-label.inline { margin: 0; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.fs-block-label:first-of-type { margin-top: 0; }
+
+.fs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+  gap: 7px;
+}
+
+.fs-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 6px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.fs-chip:hover { border-color: rgba(245,200,66,0.4); }
+.fs-chip.selected { border-color: var(--gold); background: var(--gold2); }
+
+.fs-chip-name { font-size: 13px; color: var(--text); font-weight: 500; }
+.fs-chip-tag { font-size: 10px; color: var(--text3); display: flex; align-items: center; gap: 3px; }
+.fs-chip-tag.direct { color: var(--gold); }
+
+.fs-return-opts { display: flex; gap: 7px; }
+
+.fs-radio {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 11px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text2);
+  transition: border-color 0.15s;
+}
+
+.fs-radio.selected { border-color: var(--gold); color: var(--text); }
+.fs-radio input { accent-color: var(--gold); }
+.fs-muted { color: var(--text3); }
+
+.fs-date-row, .fs-cost-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.fs-date-input {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  outline: none;
+  color-scheme: dark;
+}
+
+.fs-date-input:focus { border-color: var(--gold); }
+
+.fs-date-readout {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--gold);
+}
+
+.fs-cost-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.fs-cost-wrap:focus-within { border-color: var(--gold); }
+.fs-cost-prefix { padding: 7px 4px 7px 10px; font-family: var(--font-mono); font-size: 12px; color: var(--text3); }
+
+.fs-cost-input {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  padding: 7px 10px 7px 2px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  outline: none;
+  width: 150px;
+}
+
+.fs-links {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border2);
+}
+
+.fs-links-label { font-size: 11px; color: var(--text3); display: block; margin-bottom: 8px; }
+.fs-links-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.fs-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--blue);
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.2);
+  border-radius: 6px;
+  padding: 6px 10px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.fs-link:hover { background: rgba(96,165,250,0.16); }
+.fs-link.verify { color: var(--text2); background: rgba(255,255,255,0.04); border-color: var(--border); }
+
+/* ── City pin tag + picker ───────────────────────────── */
+.city-pin {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: var(--gold2);
+  border: 1px solid rgba(245,200,66,0.3);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.city-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+.city-picker-select {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  color: var(--text2);
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  outline: none;
+  cursor: pointer;
+  color-scheme: dark;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.city-picker-select:hover { border-color: rgba(245,200,66,0.4); color: var(--gold); }
+.city-picker-select:focus { border-color: var(--gold); }
+
+/* ── Kids activities ─────────────────────────────────── */
+.kids-section {
+  margin: 4px 0 10px;
+  padding: 10px;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 8px;
+}
+
+.kids-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--purple);
+  font-family: var(--font-mono);
+  margin-bottom: 8px;
+}
+
+.kids-list { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.kids-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text2);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 9px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: left;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.kids-chip:hover { border-color: rgba(167,139,250,0.5); color: var(--text); }
+.kids-chip.added { border-color: rgba(167,139,250,0.5); color: var(--purple); background: rgba(167,139,250,0.1); }
+.kids-approx { font-family: var(--font-mono); font-size: 10px; color: var(--text3); }
