@@ -1,10 +1,21 @@
-export const DEFAULT_TRIP = {
+// Campos de cabecera del viaje (vuelos + fechas). Se mezclan sobre cualquier
+// guardado viejo para que nunca falten.
+export const TRIP_META_DEFAULTS = {
   title: "Europa 2027",
+  start_date: "2027-02-12",   // fecha de salida desde Buenos Aires
+  arrival: "mad",             // id de catálogo de la ciudad de llegada
+  openjaw: true,              // vuelvo desde otra ciudad
+  departure: "rom",           // id de catálogo de la ciudad de regreso
   flights: 7000,
   budget_cap: 13000,
+}
+
+export const DEFAULT_TRIP = {
+  ...TRIP_META_DEFAULTS,
   cities: [
     {
       id: "madrid",
+      catalogId: "mad",
       city: "Madrid",
       flag: "🇪🇸",
       nights: 4,
@@ -19,6 +30,7 @@ export const DEFAULT_TRIP = {
     },
     {
       id: "barcelona",
+      catalogId: "bcn",
       city: "Barcelona",
       flag: "🇪🇸",
       nights: 2,
@@ -80,6 +92,7 @@ export const DEFAULT_TRIP = {
     },
     {
       id: "roma",
+      catalogId: "rom",
       city: "Roma",
       flag: "🇮🇹",
       nights: 4,

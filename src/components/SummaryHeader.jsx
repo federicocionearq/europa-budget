@@ -1,16 +1,19 @@
 import { fmt } from '../lib/calc'
+import { tripDateRange } from '../lib/dates'
 
-export function SummaryHeader({ breakdown, trip, onUpdateTrip, saving }) {
+export function SummaryHeader({ breakdown, trip, tripDates, onUpdateTrip, saving }) {
   const over = breakdown.margin < 0
+  const dateRange = tripDateRange(trip)
+  const route = (trip.cities || []).map(c => c.city).join(' · ')
 
   return (
     <div className="summary-header">
       {/* Title row */}
       <div className="title-row">
         <div>
-          <p className="trip-label">12 Feb — 2 Mar 2027 · 4 personas</p>
-          <h1 className="trip-title">Europa 2027</h1>
-          <p className="trip-route">Madrid · Barcelona · Girona · Aviñón · Bérgamo · Bolonia · Roma</p>
+          <p className="trip-label">{dateRange ? `${dateRange} · 4 personas` : 'Elegí tu fecha de salida · 4 personas'}</p>
+          <h1 className="trip-title">{trip.title || 'Europa 2027'}</h1>
+          <p className="trip-route">{route || 'Empezá eligiendo tu ciudad de llegada ✈'}</p>
         </div>
         {saving && <span className="saving-badge">guardando…</span>}
       </div>

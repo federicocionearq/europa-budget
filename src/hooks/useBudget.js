@@ -1,8 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { supabase } from '../lib/supabase'
-import { DEFAULT_TRIP } from '../lib/defaultData'
+import { supabase, hasSupabase } from '../lib/supabase'
+import { DEFAULT_TRIP, TRIP_META_DEFAULTS } from '../lib/defaultData'
 
 const BUDGET_ID = 'europa-2027-fede'
+const LOCAL_KEY = `europa-budget:${BUDGET_ID}`
+
+// Garantiza que el trip tenga los campos nuevos (start_date, arrival, etc.)
+// aunque venga de un guardado viejo sin ellos.
+function withMeta(trip) {
+  return { ...TRIP_META_DEFAULTS, ...trip }
+}
 
 export function useBudget() {
   const [trip, setTrip] = useState(null)
@@ -11,11 +18,18 @@ export function useBudget() {
   const [error, setError] = useState(null)
   const saveTimer = useRef(null)
 
-  // Load from Supabase on mount
+  // Carga inicial: Supabase si hay credenciales, si no localStorage.
   useEffect(() => {
     async function load() {
       setLoading(true)
       try {
+        if (!hasSupabase) {
+          const raw = localStorage.getItem(LOCAL_KEY)
+          setTrip(withMeta(raw ? JSON.parse(raw) : DEFAULT_TRIP))
+          setError(null)
+          return
+        }
+
         const { data, error } = await supabase
           .from('budgets')
           .select('data')
@@ -25,15 +39,16 @@ export function useBudget() {
         if (error && error.code !== 'PGRST116') throw error
 
         if (data?.data) {
-          setTrip(data.data)
+          setTrip(withMeta(data.data))
         } else {
-          // First time: save defaults
-          setTrip(DEFAULT_TRIP)
+          setTrip(withMeta(DEFAULT_TRIP))
           await supabase.from('budgets').upsert({ id: BUDGET_ID, data: DEFAULT_TRIP })
         }
       } catch (err) {
         console.error('Load error:', err)
-        setTrip(DEFAULT_TRIP)
+        // Fallback: intentar localStorage antes de rendirse al default.
+        const raw = localStorage.getItem(LOCAL_KEY)
+        setTrip(withMeta(raw ? JSON.parse(raw) : DEFAULT_TRIP))
         setError('No se pudo conectar con Supabase. Trabajando en modo local.')
       } finally {
         setLoading(false)
@@ -42,10 +57,18 @@ export function useBudget() {
     load()
   }, [])
 
-  // Debounced save to Supabase
+  // Guardado con debounce. Siempre persiste a localStorage; a Supabase si está.
   const saveTrip = useCallback(async (newTrip) => {
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(async () => {
+      try {
+        localStorage.setItem(LOCAL_KEY, JSON.stringify(newTrip))
+      } catch (err) {
+        console.error('Local save error:', err)
+      }
+
+      if (!hasSupabase) return
+
       setSaving(true)
       try {
         const { error } = await supabase
@@ -54,7 +77,7 @@ export function useBudget() {
         if (error) throw error
       } catch (err) {
         console.error('Save error:', err)
-        setError('Error al guardar. Verificá la conexión.')
+        setError('Error al guardar en Supabase (cambios guardados en este dispositivo).')
       } finally {
         setSaving(false)
       }
